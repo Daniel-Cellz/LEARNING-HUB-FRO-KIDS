@@ -1,0 +1,51 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Quicksand:wght@400;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Quicksand", ui-sans-serif, system-ui, sans-serif;
+  --font-chunky: "Fredoka One", cursive;
+  
+  --color-sky-light: #81D4FA;
+  --color-navy: #0D47A1;
+  --color-energy: #FFD600;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-15px); }
+}
+
+@keyframes word-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.animate-floating {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-word-bounce {
+  animation: word-bounce 2s infinite;
+}
+
+.island-shadow {
+  filter: drop-shadow(0 20px 10px rgba(0,0,0,0.1));
+}
+
+@utility custom-scrollbar {
+  &::-webkit-scrollbar {
+    width: 10px;
+  }
+  &::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 10px;
+  }
+  &::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 10px;
+    border: 3px solid #f1f5f9;
+  }
+  &::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+  }
+}

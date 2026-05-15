@@ -1,0 +1,83 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // --- Helpers ---
+    function isSignedIn() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // --- User Validation ---
+    function isValidUser(data) {
+      return data.keys().hasAll(['name', 'buddyType', 'starCoins', 'cloudEnergy', 'voiceType', 'gradeLevel']) &&
+             data.keys().size() >= 6 &&
+             data.name is string && data.name.size() <= 50 &&
+             data.buddyType in ['robot', 'puppy', 'dragon'] &&
+             data.voiceType in ['male', 'female'] &&
+             data.gradeLevel is int && data.gradeLevel >= 1 && data.gradeLevel <= 6 &&
+             data.starCoins is int && data.starCoins >= 0 &&
+             data.cloudEnergy is int && data.cloudEnergy >= 0;
+    }
+
+    // --- Progress Validation ---
+    function isValidProgress(data) {
+      return data.keys().hasAll(['userId', 'lessonId', 'type', 'score', 'timestamp']) &&
+             data.userId == request.auth.uid &&
+             data.type in ['reading', 'writing', 'spelling', 'quiz'] &&
+             data.score is number && data.score >= 0 && data.score <= 1;
+    }
+
+    match /users/{userId} {
+      allow get: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data) && (
+        request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['name', 'buddyType', 'starCoins', 'cloudEnergy', 'unlockedIslands', 'currentOutfit', 'location', 'voiceType', 'gradeLevel', 'focusArea', 'reportCardAnalysis', 'totalPoints'])
+      );
+      
+      match /progress/{progressId} {
+        allow list, get: if isOwner(userId);
+        allow create: if isOwner(userId) && isValidProgress(request.resource.data);
+        // Progress should be immutable mostly, but allow updates for retries if needed
+        allow update: if isOwner(userId) && isValidProgress(request.resource.data);
+      }
+    }
+
+    match /matches/{matchId} {
+      // SECURE LIST QUERY: Only allow listing matches that are waiting for players
+      allow list: if isSignedIn() && resource.data.status == 'waiting';
+      
+      // GET: Allow if signed in
+      allow get: if isSignedIn();
+      
+      // CREATE: Basic validation
+      allow create: if isSignedIn();
+      
+      // UPDATE: Split into Joining and Playing actions
+      allow update: if isSignedIn() && (
+        // Action: Join - Only if match is waiting and user is not already in it
+        (resource.data.status == 'waiting' && 
+         request.resource.data.status == 'playing' &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'status'])) ||
+        
+        // Action: Play - Only if user is one of the players
+        (request.auth.uid in resource.data.players.keys() &&
+         request.resource.data.diff(resource.data).affectedKeys().hasOnly(['players', 'currentQuestionIndex', 'status', 'winnerId', 'lastAnsweredAt']))
+      );
+      
+      allow delete: if isSignedIn() && (request.auth.uid in resource.data.players.keys());
+    }
+  }
+}

@@ -1,0 +1,145 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Profile",
+      "description": "Child's profile and progress state",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The child's name"
+        },
+        "buddyType": {
+          "type": "string",
+          "enum": ["robot", "puppy", "dragon"],
+          "description": "The chosen AI guide type"
+        },
+        "voiceType": {
+          "type": "string",
+          "enum": ["male", "female"],
+          "description": "Preferred voice for the AI buddy"
+        },
+        "gradeLevel": {
+          "type": "integer",
+          "description": "Child's current school grade (1-6)"
+        },
+        "starCoins": {
+          "type": "integer",
+          "description": "Currency for buying outfits"
+        },
+        "cloudEnergy": {
+          "type": "integer",
+          "description": "Energy to unlock new islands"
+        },
+        "unlockedIslands": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "focusArea": {
+          "type": "string",
+          "description": "Literacy focus area from report card analysis"
+        },
+        "reportCardAnalysis": {
+          "type": "string",
+          "description": "Full text analysis of scanned report card"
+        },
+        "currentOutfit": {
+          "type": "string"
+        },
+        "location": {
+          "type": "string",
+          "description": "Detected region for accent adjustment"
+        },
+        "totalPoints": {
+          "type": "integer",
+          "description": "Accumulated points from all activities"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["name", "buddyType", "starCoins", "cloudEnergy", "voiceType", "gradeLevel"]
+    },
+    "Match": {
+      "title": "Competition Match",
+      "description": "Real-time competition arena between two users",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": ["waiting", "playing", "finished"]
+        },
+        "players": {
+          "type": "object",
+          "description": "Map of user IDs to contest player data"
+        },
+        "questions": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "currentQuestionIndex": {
+          "type": "integer"
+        },
+        "winnerId": {
+          "type": "string"
+        },
+        "config": {
+          "type": "object",
+          "properties": {
+            "questionCount": { "type": "integer" },
+            "gradeLevel": { "type": "integer" }
+          }
+        },
+        "createdAt": {
+          "type": "integer",
+          "description": "Timestamp (ms)"
+        }
+      }
+    },
+    "Progress": {
+      "title": "Lesson Progress",
+      "description": "Records of reading, writing, and spelling attempts",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "lessonId": { "type": "string" },
+        "type": {
+          "type": "string",
+          "enum": ["reading", "writing", "spelling"]
+        },
+        "score": {
+          "type": "number",
+          "description": "Score from 0 to 1"
+        },
+        "feedback": {
+          "type": "string",
+          "description": "AI-generated positive feedback"
+        },
+        "word": {
+          "type": "string",
+          "description": "The word or sentence practiced"
+        },
+        "timestamp": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["userId", "lessonId", "type", "score", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profiles and aggregate progress"
+    },
+    "/users/{userId}/progress/{progressId}": {
+      "schema": "Progress",
+      "description": "Subcollection for granular lesson performance"
+    },
+    "/matches/{matchId}": {
+      "schema": "Match",
+      "description": "Public matches and private rooms"
+    }
+  }
+}

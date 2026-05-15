@@ -1,0 +1,9 @@
+{
+  "name": "LingoLeap",
+  "description": "An AI-powered literacy coach for kids featuring gamified islands, voice feedback, and handwriting labs.",
+  "requestFramePermissions": [
+    "microphone",
+    "geolocation"
+  ],
+  "majorCapabilities": []
+}
